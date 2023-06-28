@@ -1,2 +1,22 @@
 # cleanGmail
 A Python tool that permanently deletes Gmail messages based on labels by threads
+
+## I. Create a credential for your email
+```bash
+1. Enable API: https://console.cloud.google.com/flows/enableapi?apiid=gmail.googleapis.com
+2. Access Credentials: https://console.cloud.google.com/apis/credentials
+3. Click Create Credentials > OAuth client ID.
+4. Click Application type > Desktop app.
+5. In the Name field, type a name for the credential. This name is only shown in the Google Cloud console.
+6. Click Create. The OAuth client created screen appears, showing your new Client ID and Client secret.
+7. Click OK. The newly created credential appears under OAuth 2.0 Client IDs.
+8. Save the downloaded JSON file as credentials.json, and move the file to your working directory.
+```
+
+## II. cleanGmail
+```bash
+1. Install requirements: pip/pip3 install -r requirements.txt
+2. Help: python3 cleanGmail -h
+```
+
+## Note: Put your credentials.json in the same working directory
