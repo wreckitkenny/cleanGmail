@@ -44,33 +44,26 @@ def get_label_thread_total(service, labelId):
     results = service.users().labels().get(userId='me', id=labelId).execute()
     return results['threadsTotal']
 
-def list_threads(service, labelId, maxResult):
+def list_threads(service, query):
     threadList = []
     pageToken = ""
-    rep = 0
+    cont = True
 
     print("=> [i] Getting threads... ")
 
-    if maxResult > 500: reps = maxResult / 500
-    if maxResult <= 500: reps = 1
-
-    while rep < reps:
-        # if pageToken:
-        results = service.users().threads().list(userId='me', labelIds=labelId, maxResults=maxResult, pageToken=pageToken).execute()
-        # else:
-        #     results = service.users().threads().list(userId='me', labelIds=labelId, maxResults=maxResult).execute()
-
+    while cont:
+        results = service.users().threads().list(userId='me', q=query, maxResults=500, pageToken=pageToken).execute()
         threads = results.get('threads', [])
 
         for thread in threads:
             threadList.append(thread['id'])
 
-        rep += 1
         try:
             pageToken = results['nextPageToken']
         except KeyError:
             pageToken = ""
-
+            cont = False
+    if len(threadList) != 0: threadList = dedup_thread_list(threadList)
     return threadList
 
 def dedup_thread_list(threadList):
@@ -109,31 +102,30 @@ def main():
 
         print('WARNING: MAKE SURE THAT YOU HAVE RESPONSIBILITY ON YOUR OWN ACTION.\n=> Loading...\n')
         sleep(3)
-        print('===== cleanGmail features =====\n+ Delete mails based on Labels\n')
-        print('@Developer: _wiky\n---\n')
         print('===============================')
-        labelName = input("[?] Which Gmail label do you wanna choose to delete: ")
+        query = input("[?] Which Gmail query operator do you want to use? ")
 
-        labelId = get_label_id(service, labelName)
-        if labelId == None:
-            print("=> [x] Label [{}] is not existing.".format(labelName))
-            return
+        # labelId = get_label_id(service, labelName)
+        # if labelId == None:
+        #     print("=> [x] Label [{}] is not existing.".format(labelName))
+        #     return
 
-        threadTotal = get_label_thread_total(service, labelId)
+        # threadTotal = get_label_thread_total(service, labelId)
 
-        maxResult = input("[?] There are {} threads in label [{}]. How many thread do you wanna to delete at one time: ".format(threadTotal, labelName))
+        # maxResult = input("[?] There are {} threads in label [{}]. How many thread do you wanna to delete at one time: ".format(threadTotal, labelName))
 
-        threadList = list_threads(service, labelId, int(maxResult))
+        threadList = list_threads(service, query)
         if len(threadList) == 0:
-            print("=> [x] No thread found in label [{}].".format(labelName))
+            print("=> [x] No thread found.")
             return
 
-        msgErrList, amountOfMsg, totalTime = delete_threads(service, threadList)
+        numOfExe = int(input("[?] There are {} threads for the query [{}]. How many thread do you want to delete? ".format(len(threadList), query.strip())))
+        msgErrList, amountOfMsg, totalTime = delete_threads(service, threadList[:numOfExe])
         if len(msgErrList) != 0:
             print("=> [x] There is/are {} being unable to delete.".format(len(msgErrList)))
             return
 
-        print("=> [i] {} - Just deleted {}/{} threads in {} seconds.".format(labelName, amountOfMsg-len(msgErrList), amountOfMsg, totalTime))
+        print("=> [i] Just deleted {}/{} threads in {} seconds.".format(amountOfMsg-len(msgErrList), amountOfMsg, totalTime))
 
 if __name__ == '__main__':
     main()
